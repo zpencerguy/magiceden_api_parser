@@ -98,6 +98,14 @@ class MagicParser:
         url = 'https://api-mainnet.magiceden.io/volumes?edge_cache=true'
         return self._request(url)
 
+    def get_marketplace_volumes(self) -> dict:
+        """
+        Get Total volumes by marketplace
+        :return: dict of volumes by marketplace
+        """
+        url = 'https://api-mainnet.magiceden.io/rpc/getAggregatedMarketplaceMetrics?edge_cache=true'
+        return self._request(url)
+
     def get_all_collections(self) -> list[dict]:
         """
         Get all collections with little information
