@@ -106,6 +106,14 @@ class MagicParser:
         url = 'https://api-mainnet.magiceden.io/rpc/getAggregatedMarketplaceMetrics?edge_cache=true'
         return self._request(url)
 
+    def get_drops(self, limit: int, offset: int) -> dict:
+        """
+        Get upcoming drops
+        :return: dictionary of collections with drop dates
+        """
+        url = f'https://api-mainnet.magiceden.io/drops?limit={limit}&offset={offset}'
+        return self._request(url)
+
     def get_all_collections(self) -> list[dict]:
         """
         Get all collections with little information
