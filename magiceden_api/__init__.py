@@ -45,6 +45,9 @@ class MagicParser:
         options.headless = driver_headless
         self.driver = uc.Chrome(options=options, user_data_dir=temp_dir_path, use_subprocess=True)
 
+    def _close_driver(self):
+        self.driver.close()
+
     def _request(self, url, retry_timeout=5):
         r = None
         is_error = True
@@ -130,6 +133,10 @@ class MagicParser:
         :return: list of organizations.
         """
         url = 'https://api-mainnet.magiceden.io/all_organizations?edge_cache=true'
+        return self._request(url)
+
+    def get_collection_info(self, symbol: str) -> list[dict]:
+        url = f'https://api-mainnet.magiceden.io/collections/{symbol}?edge_cache=true'
         return self._request(url)
 
     def get_popular_collections(self, limit=1000, period='1d') -> list[dict]:
@@ -331,7 +338,7 @@ class MagicParser:
         url = 'https://api-mainnet.magiceden.io/whitelists/upcoming'
         return self._request(url)
 
-    def get_listed_nfts(self, collection_symbol) -> list[dict]:
+    def get_listed_nfts(self, collection_symbol, limit, skip) -> list[dict]:
         """
         Get all listings from collections
 
@@ -345,12 +352,32 @@ class MagicParser:
             "$sort": {
                 "takerAmount": 1
             },
-            "$skip": 0,
-            "$limit": 20,
+            "$skip": skip,
+            "$limit": limit,
             "status": []
         }
         q = json.dumps(q)
         url = f'https://api-mainnet.magiceden.io/rpc/getListedNFTsByQueryLite?q={q}'
+        return self._request(url)['results']
+
+    def get_biddings(self, mint_address_list):
+        """
+        Get all active bids from a token
+
+        :param mint_address_list: list of mint addresses of a token
+        :return: list of dict bidding info
+        """
+        q = {
+            "$match": {
+                "initializerDepositTokenMintAccount": {
+                    "$in": mint_address_list}
+            },
+            "$sort": {
+                "createdAt": -1
+            }
+        }
+        q = json.dumps(q)
+        url = f'https://api-mainnet.magiceden.io/rpc/getBiddingsByQuery/?q={q}'
         return self._request(url)['results']
 
     def get_floor_price(self, collection_symbol) -> float:
@@ -458,6 +485,10 @@ class MagicParser:
         :return:
         """
         url = f'https://api-mainnet.magiceden.io/rpc/getCollectionTimeSeries/{collection_symbol}?&resolution={tdelta}'
+        return self._request(url)
+
+    def get_collection_stats(self, collection_symbol, tdelta='1d'):
+        url = f'https://stats-mainnet.magiceden.io/collection_stats/getCollectionTimeSeries/{collection_symbol}?&resolution={tdelta}&edge_cache=true&addLastDatum=true'
         return self._request(url)
 
     def get_nfts_by_escrow_owner(self, holder_wallet: str) -> list[dict]:
